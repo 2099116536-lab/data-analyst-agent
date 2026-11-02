@@ -1,0 +1,6 @@
+{"id": "b01", "split": "boundary", "type": "unsupported", "question": "帮我预测下个月的销售额", "gold_sql": "", "tables": []}
+{"id": "b02", "split": "boundary", "type": "unsupported", "question": "为什么上个月销售额下降了？", "gold_sql": "", "tables": []}
+{"id": "b03", "split": "boundary", "type": "unsupported", "question": "各城市的订单数和客单价分别是多少？", "gold_sql": "", "tables": []}
+{"id": "b04", "split": "boundary", "type": "unsupported", "question": "华东地区的销售额是多少？", "gold_sql": "", "tables": []}
+{"id": "b05", "split": "boundary", "type": "unsupported", "question": "2025年和2026年的销售额对比", "gold_sql": "", "tables": []}
+{"id": "b06", "split": "boundary", "type": "unsupported", "question": "各品类的销量和销售额", "gold_sql": "", "tables": []}

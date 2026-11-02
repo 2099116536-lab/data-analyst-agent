@@ -1,0 +1,539 @@
+{
+  "summary": {
+    "total": 44,
+    "exec_accuracy": {
+      "boundary": {
+        "acc": 100.0,
+        "n": 6
+      },
+      "dev": {
+        "acc": 100.0,
+        "n": 22
+      },
+      "holdout": {
+        "acc": 100.0,
+        "n": 8
+      },
+      "unseen": {
+        "acc": 75.0,
+        "n": 8
+      }
+    },
+    "overall_acc": 94.4,
+    "boundary_acc": 100.0,
+    "table_hit_rate": 97.2,
+    "schema_chars": {
+      "full": 891,
+      "retrieved_avg": 402,
+      "saved_pct": 54.9
+    },
+    "latency_ms": {
+      "avg": 914.1,
+      "p95": 1539.0
+    },
+    "status_dist": {
+      "ok": 35,
+      "rejected": 2,
+      "empty": 1,
+      "clarify": 6
+    },
+    "failures": [
+      {
+        "id": "u02",
+        "q": "成都和重庆哪个卖得更好？",
+        "why": "结果不一致（生成 0 行 / 标准 1 行）"
+      },
+      {
+        "id": "u07",
+        "q": "各品类的销量占比是多少？",
+        "why": "结果不一致（生成 6 行 / 标准 6 行）"
+      }
+    ]
+  },
+  "details": [
+    {
+      "id": "d01",
+      "split": "dev",
+      "type": "agg",
+      "question": "全站累计销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1265.7,
+      "reason": "",
+      "sql": "SELECT SUM(order_items.amount) AS total_sales FROM order_items JOIN orders ON order_items.order_id = orders.id WHERE orders.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "d02",
+      "split": "dev",
+      "type": "agg",
+      "question": "一共多少笔有效订单？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 989.2,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT orders.id) AS order_count FROM orders WHERE orders.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "d03",
+      "split": "dev",
+      "type": "agg",
+      "question": "客单价是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 981.9,
+      "reason": "",
+      "sql": "SELECT ROUND(SUM(order_items.amount) * 1.0 / COUNT(DISTINCT orders.id), 2) AS avg_order_value FROM orders JOIN order_items ON order_items.order_id = orders.id WHERE orders.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "d04",
+      "split": "dev",
+      "type": "agg",
+      "question": "累计卖出多少件商品？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 916.6,
+      "reason": "",
+      "sql": "SELECT SUM(order_items.qty) AS total_qty FROM order_items JOIN orders ON order_items.order_id = orders.id WHERE orders.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "d05",
+      "split": "dev",
+      "type": "group",
+      "question": "各城市的销售额是多少？按销售额从高到低排序",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1261.3,
+      "reason": "",
+      "sql": "SELECT c.city, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY c.city\nORDER BY sales_amount DESC"
+    },
+    {
+      "id": "d06",
+      "split": "dev",
+      "type": "group",
+      "question": "各品类的销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1031.5,
+      "reason": "",
+      "sql": "SELECT p.category, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nJOIN products p ON oi.product_id = p.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY p.category\nORDER BY sales_amount DESC"
+    },
+    {
+      "id": "d07",
+      "split": "dev",
+      "type": "group",
+      "question": "各渠道的订单数是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 655.0,
+      "reason": "",
+      "sql": "SELECT channel, COUNT(DISTINCT id) AS order_count FROM orders WHERE status IN ('已支付','已完成') GROUP BY channel"
+    },
+    {
+      "id": "d08",
+      "split": "dev",
+      "type": "group",
+      "question": "各会员等级的销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1149.5,
+      "reason": "",
+      "sql": "SELECT c.level, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM customers c\nJOIN orders o ON c.id = o.customer_id\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY c.level"
+    },
+    {
+      "id": "d09",
+      "split": "dev",
+      "type": "time",
+      "question": "2026年10月的销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 686.5,
+      "reason": "",
+      "sql": "SELECT SUM(order_items.amount) AS sales_amount FROM order_items JOIN orders ON order_items.order_id = orders.id WHERE orders.status IN ('已支付','已完成') AND strftime('%Y-%m', orders.order_date) = '2026-10'"
+    },
+    {
+      "id": "d10",
+      "split": "dev",
+      "type": "time",
+      "question": "上个月的订单数是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1421.3,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT orders.id) AS order_count FROM orders WHERE orders.status IN ('已支付','已完成') AND strftime('%Y-%m', orders.order_date) = '2026-10'"
+    },
+    {
+      "id": "d11",
+      "split": "dev",
+      "type": "time_group",
+      "question": "2026年各月的销售额趋势",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1555.3,
+      "reason": "",
+      "sql": "SELECT strftime('%Y-%m', o.order_date) AS month, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\n  AND o.order_date >= '2026-01-01' AND o.order_date < '2027-01-01'\nGROUP BY month\nORDER BY month"
+    },
+    {
+      "id": "d12",
+      "split": "dev",
+      "type": "topn",
+      "question": "销售额最高的3个城市是哪些？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1440.3,
+      "reason": "",
+      "sql": "SELECT c.city, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY c.city\nORDER BY sales_amount DESC\nLIMIT 3"
+    },
+    {
+      "id": "d13",
+      "split": "dev",
+      "type": "filter_group",
+      "question": "成都各品类的销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1363.5,
+      "reason": "",
+      "sql": "SELECT p.category, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nJOIN products p ON oi.product_id = p.id\nJOIN customers c ON o.customer_id = c.id\nWHERE o.status IN ('已支付','已完成')\n  AND c.city = '成都'\nGROUP BY p.category\nORDER BY sales_amount DESC"
+    },
+    {
+      "id": "d14",
+      "split": "dev",
+      "type": "filter_agg",
+      "question": "金卡会员贡献了多少销售额？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 957.9,
+      "reason": "",
+      "sql": "SELECT ROUND(SUM(oi.amount), 2) AS sales_amount FROM orders o JOIN customers c ON c.id = o.customer_id JOIN order_items oi ON oi.order_id = o.id WHERE o.status IN ('已支付','已完成') AND c.level = '金卡'"
+    },
+    {
+      "id": "d15",
+      "split": "dev",
+      "type": "filter_agg",
+      "question": "直播渠道的订单数是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 770.8,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT orders.id) AS order_count FROM orders WHERE orders.channel = '直播' AND orders.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "d16",
+      "split": "dev",
+      "type": "topn",
+      "question": "销量最高的5个商品是哪些？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1084.7,
+      "reason": "",
+      "sql": "SELECT p.name, SUM(oi.qty) AS total_qty\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nJOIN products p ON oi.product_id = p.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY p.id, p.name\nORDER BY total_qty DESC\nLIMIT 5"
+    },
+    {
+      "id": "d17",
+      "split": "dev",
+      "type": "agg",
+      "question": "2026年有多少个客户下过单？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1070.8,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT orders.customer_id) AS 下单客户数 FROM orders WHERE orders.status IN ('已支付','已完成') AND strftime('%Y', orders.order_date) = '2026'"
+    },
+    {
+      "id": "d18",
+      "split": "dev",
+      "type": "compare",
+      "question": "2026年9月和10月的销售额对比",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1262.1,
+      "reason": "",
+      "sql": "SELECT strftime('%Y-%m', o.order_date) AS month, ROUND(SUM(oi.amount), 2) AS sales_amount FROM orders o JOIN order_items oi ON oi.order_id = o.id WHERE o.status IN ('已支付','已完成') AND o.order_date >= '2026-09-01' AND o.order_date < '2026-11-01' GROUP BY strftime('%Y-%m', o.order_date) ORDER BY month"
+    },
+    {
+      "id": "d19",
+      "split": "dev",
+      "type": "reject",
+      "question": "现在库存还剩多少？",
+      "passed": true,
+      "status": "rejected",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "d20",
+      "split": "dev",
+      "type": "reject",
+      "question": "各供应商的采购成本是多少？",
+      "passed": true,
+      "status": "rejected",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "d21",
+      "split": "dev",
+      "type": "filter_status",
+      "question": "已退款订单有多少笔？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 987.9,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT id) AS refunded_order_count FROM orders WHERE status = '已退款'"
+    },
+    {
+      "id": "d22",
+      "split": "dev",
+      "type": "time",
+      "question": "最近30天的销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1385.6,
+      "reason": "",
+      "sql": "SELECT SUM(oi.amount) AS sales_amount\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\n  AND o.order_date >= '2026-10-03'\n  AND o.order_date <= '2026-11-01'"
+    },
+    {
+      "id": "h01",
+      "split": "holdout",
+      "type": "time",
+      "question": "上个月一共卖了多少钱？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 974.4,
+      "reason": "",
+      "sql": "SELECT ROUND(SUM(oi.amount), 2) AS sales_amount FROM orders o JOIN order_items oi ON oi.order_id = o.id WHERE o.status IN ('已支付','已完成') AND strftime('%Y-%m', o.order_date) = '2026-10'"
+    },
+    {
+      "id": "h02",
+      "split": "holdout",
+      "type": "topn",
+      "question": "哪个城市卖得最好？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1539.0,
+      "reason": "",
+      "sql": "SELECT c.city, SUM(oi.amount) AS sales FROM orders o JOIN customers c ON c.id = o.customer_id JOIN order_items oi ON oi.order_id = o.id WHERE o.status IN ('已支付','已完成') GROUP BY c.city ORDER BY sales DESC LIMIT 1"
+    },
+    {
+      "id": "h03",
+      "split": "holdout",
+      "type": "filter_agg",
+      "question": "APP端贡献了多少订单？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1104.7,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT orders.id) AS order_count FROM orders WHERE orders.channel = 'APP' AND orders.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "h04",
+      "split": "holdout",
+      "type": "filter_agg",
+      "question": "黑卡用户的客单价是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1092.7,
+      "reason": "",
+      "sql": "SELECT ROUND(SUM(oi.amount) * 1.0 / COUNT(DISTINCT o.id), 2) AS avg_order_value\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\n  AND c.level = '黑卡'"
+    },
+    {
+      "id": "h05",
+      "split": "holdout",
+      "type": "time",
+      "question": "2025年全年的销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 878.6,
+      "reason": "",
+      "sql": "SELECT SUM(order_items.amount) AS total_sales FROM orders JOIN order_items ON order_items.order_id = orders.id WHERE orders.status IN ('已支付','已完成') AND orders.order_date >= '2025-01-01' AND orders.order_date <= '2025-12-31'"
+    },
+    {
+      "id": "h06",
+      "split": "holdout",
+      "type": "topn",
+      "question": "销售额最低的3个品类是哪些？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1580.4,
+      "reason": "",
+      "sql": "SELECT p.category, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nJOIN products p ON oi.product_id = p.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY p.category\nORDER BY sales_amount ASC\nLIMIT 3"
+    },
+    {
+      "id": "h07",
+      "split": "holdout",
+      "type": "group",
+      "question": "各渠道的平均订单金额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1336.3,
+      "reason": "",
+      "sql": "SELECT o.channel, ROUND(SUM(oi.amount) / COUNT(DISTINCT o.id), 2) AS avg_order_amount FROM orders o JOIN order_items oi ON oi.order_id = o.id WHERE o.status IN ('已支付','已完成') GROUP BY o.channel"
+    },
+    {
+      "id": "h08",
+      "split": "holdout",
+      "type": "time_group",
+      "question": "每天的销售额趋势是怎样的？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 598.5,
+      "reason": "",
+      "sql": "SELECT orders.order_date, ROUND(SUM(order_items.amount), 2) AS sales_amount\nFROM orders\nJOIN order_items ON order_items.order_id = orders.id\nWHERE orders.status IN ('已支付','已完成')\nGROUP BY orders.order_date\nORDER BY orders.order_date"
+    },
+    {
+      "id": "u01",
+      "split": "unseen",
+      "type": "time",
+      "question": "过去半个月卖了多少件商品？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 829.0,
+      "reason": "",
+      "sql": "SELECT SUM(order_items.qty) FROM order_items JOIN orders ON order_items.order_id = orders.id WHERE orders.status IN ('已支付','已完成') AND orders.order_date >= '2026-10-18' AND orders.order_date <= '2026-11-01'"
+    },
+    {
+      "id": "u02",
+      "split": "unseen",
+      "type": "compare",
+      "question": "成都和重庆哪个卖得更好？",
+      "passed": false,
+      "status": "empty",
+      "latency_ms": 1283.1,
+      "reason": "结果不一致（生成 0 行 / 标准 1 行）",
+      "sql": "SELECT o.channel AS region, SUM(oi.amount) AS sales_amount, COUNT(DISTINCT o.id) AS order_count, ROUND(SUM(oi.amount) / COUNT(DISTINCT o.id), 2) AS avg_order_value, SUM(oi.qty) AS total_qty FROM orders o JOIN order_items oi ON oi.order_id = o.id WHERE o.status IN ('已支付','已完成') AND o.channel IN ('成都','重庆') GROUP BY o.channel ORDER BY sales_amount DESC"
+    },
+    {
+      "id": "u03",
+      "split": "unseen",
+      "type": "topn",
+      "question": "销售额排名前三的渠道",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1199.2,
+      "reason": "",
+      "sql": "SELECT o.channel, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\nGROUP BY o.channel\nORDER BY sales_amount DESC\nLIMIT 3"
+    },
+    {
+      "id": "u04",
+      "split": "unseen",
+      "type": "filter_agg",
+      "question": "会员等级为金卡的客户贡献了多少订单？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1073.7,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT o.id) AS order_count FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.level = '金卡' AND o.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "u05",
+      "split": "unseen",
+      "type": "compare",
+      "question": "2026年8月到10月的销售额分别是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1249.9,
+      "reason": "",
+      "sql": "SELECT strftime('%Y-%m', o.order_date) AS month, ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\n  AND o.order_date >= '2026-08-01'\n  AND o.order_date < '2026-11-01'\nGROUP BY strftime('%Y-%m', o.order_date)\nORDER BY month"
+    },
+    {
+      "id": "u06",
+      "split": "unseen",
+      "type": "agg",
+      "question": "西安有多少个下单客户？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 971.3,
+      "reason": "",
+      "sql": "SELECT COUNT(DISTINCT o.customer_id) AS 下单客户数 FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.city = '西安' AND o.status IN ('已支付','已完成')"
+    },
+    {
+      "id": "u07",
+      "split": "unseen",
+      "type": "group",
+      "question": "各品类的销量占比是多少？",
+      "passed": false,
+      "status": "ok",
+      "latency_ms": 1097.1,
+      "reason": "结果不一致（生成 6 行 / 标准 6 行）",
+      "sql": "SELECT p.category, SUM(oi.qty) AS total_qty, ROUND(SUM(oi.qty) * 100.0 / (SELECT SUM(oi2.qty) FROM order_items oi2 JOIN orders o2 ON oi2.order_id = o2.id WHERE o2.status IN ('已支付','已完成')), 2) AS qty_share_pct FROM order_items oi JOIN orders o ON oi.order_id = o.id JOIN products p ON oi.product_id = p.id WHERE o.status IN ('已支付','已完成') GROUP BY p.category ORDER BY total_qty DESC"
+    },
+    {
+      "id": "u08",
+      "split": "unseen",
+      "type": "time",
+      "question": "上个季度销售额是多少？",
+      "passed": true,
+      "status": "ok",
+      "latency_ms": 1173.0,
+      "reason": "",
+      "sql": "SELECT ROUND(SUM(oi.amount), 2) AS sales_amount\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nWHERE o.status IN ('已支付','已完成')\n  AND o.order_date >= '2026-07-01'\n  AND o.order_date < '2026-10-01'"
+    },
+    {
+      "id": "b01",
+      "split": "boundary",
+      "type": "unsupported",
+      "question": "帮我预测下个月的销售额",
+      "passed": true,
+      "status": "clarify",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "b02",
+      "split": "boundary",
+      "type": "unsupported",
+      "question": "为什么上个月销售额下降了？",
+      "passed": true,
+      "status": "clarify",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "b03",
+      "split": "boundary",
+      "type": "unsupported",
+      "question": "各城市的订单数和客单价分别是多少？",
+      "passed": true,
+      "status": "clarify",
+      "latency_ms": 0.2,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "b04",
+      "split": "boundary",
+      "type": "unsupported",
+      "question": "华东地区的销售额是多少？",
+      "passed": true,
+      "status": "clarify",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "b05",
+      "split": "boundary",
+      "type": "unsupported",
+      "question": "2025年和2026年的销售额对比",
+      "passed": true,
+      "status": "clarify",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    },
+    {
+      "id": "b06",
+      "split": "boundary",
+      "type": "unsupported",
+      "question": "各品类的销量和销售额",
+      "passed": true,
+      "status": "clarify",
+      "latency_ms": 0.0,
+      "reason": "",
+      "sql": ""
+    }
+  ]
+}

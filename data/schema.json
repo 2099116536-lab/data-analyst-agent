@@ -1,0 +1,72 @@
+{
+  "db": "shop.db",
+  "dialect": "sqlite",
+  "tables": [
+    {
+      "name": "customers",
+      "cn": "客户表",
+      "desc": "一行一个注册客户",
+      "columns": {
+        "id": "客户ID",
+        "name": "客户姓名",
+        "city": "所在城市（成都/重庆/西安/昆明/贵阳/北京/上海/广州/杭州/武汉）",
+        "level": "会员等级（普通/银卡/金卡/黑卡）",
+        "created_at": "注册日期 YYYY-MM-DD"
+      },
+      "keywords": ["客户", "用户", "会员", "城市", "地区", "等级", "注册"]
+    },
+    {
+      "name": "products",
+      "cn": "商品表",
+      "desc": "一行一个在售商品",
+      "columns": {
+        "id": "商品ID",
+        "name": "商品名称",
+        "category": "商品品类（家电/数码/食品/服饰/美妆/母婴）",
+        "price": "商品标价（元）"
+      },
+      "keywords": ["商品", "产品", "品类", "类目", "标价", "货"]
+    },
+    {
+      "name": "orders",
+      "cn": "订单表",
+      "desc": "一行一笔订单；一个订单可含多条商品明细",
+      "columns": {
+        "id": "订单ID",
+        "customer_id": "客户ID，关联 customers.id",
+        "order_date": "下单日期 YYYY-MM-DD",
+        "status": "订单状态（已支付/已完成/已退款/待支付）",
+        "channel": "下单渠道（APP/小程序/门店/直播）"
+      },
+      "keywords": ["订单", "单量", "下单", "成交", "渠道", "状态", "退款", "待支付"]
+    },
+    {
+      "name": "order_items",
+      "cn": "订单明细表",
+      "desc": "一行一个订单中的商品行，金额已含数量折扣",
+      "columns": {
+        "id": "明细ID",
+        "order_id": "订单ID，关联 orders.id",
+        "product_id": "商品ID，关联 products.id",
+        "qty": "购买数量",
+        "unit_price": "成交单价（元）",
+        "amount": "该行成交金额（元）= 数量 × 成交单价"
+      },
+      "keywords": ["明细", "数量", "件数", "金额", "销售额", "营收", "gmv", "销量", "单价"]
+    }
+  ],
+  "metrics": {
+    "销售额": "SUM(order_items.amount)，口径：只统计 orders.status IN ('已支付','已完成')",
+    "订单数": "COUNT(DISTINCT orders.id)，同口径",
+    "客单价": "销售额 ÷ 订单数，同口径",
+    "销量": "SUM(order_items.qty)，同口径",
+    "下单客户数": "COUNT(DISTINCT orders.customer_id)，同口径"
+  },
+  "notes": [
+    "默认口径排除 已退款 和 待支付 订单；用户明确问退款/待支付/全部时才放宽",
+    "所有金额单位为人民币元，保留 2 位小数",
+    "时间字段为 TEXT，格式 YYYY-MM-DD，可用 strftime('%Y-%m', order_date) 按月聚合",
+    "跨表取值：城市/等级 → customers；品类/商品 → products；金额/数量 → order_items"
+  ],
+  "out_of_scope": ["库存", "退货原因", "供应商", "采购成本", "毛利率", "物流时效", "员工", "工资", "竞品"]
+}

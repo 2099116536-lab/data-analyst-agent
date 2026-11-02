@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 生成示例库
+        run: python data/make_db.py --rows 4000
+
+      - name: 单元测试
+        run: python -m unittest discover -s tests -v
+
+      - name: 评测（规则基线，无外部依赖）
+        run: python main.py eval --no-llm --out eval/results_ci.json
+
+      - name: 校验评测结果不低于基线
+        run: |
+          python - <<'PY'
+          import json, sys
+          s = json.load(open("eval/results_ci.json", encoding="utf-8"))["summary"]
+          acc = s["exec_accuracy"]
+          # dev/holdout 不允许回退；unseen 是泛化指标，只记录不卡
+          for split in ("dev", "holdout"):
+              got = acc[split]["acc"]
+              assert got == 100.0, f"{split} 准确率回退：{got}"
+          assert s["boundary_acc"] == 100.0, "边界识别回退"
+          print("OK", acc, "boundary", s["boundary_acc"], "latency", s["latency_ms"])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: eval/results_ci.json

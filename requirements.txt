@@ -1,0 +1,4 @@
+# 核心链路零第三方依赖：评测、单测、CLI 只用标准库
+# 以下为可选：开了它们才有 HTTP 接口（不装则 server.py 自动降级到 http.server）
+fastapi>=0.110
+uvicorn[standard]>=0.29
